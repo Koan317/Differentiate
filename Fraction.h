@@ -1,10 +1,10 @@
 #ifndef FRACTION_H
 #define FRACTION_H
 #include <string>
-#include "isNum.cpp"
-#include "gcd.cpp"
-#include "strCombine.cpp"
 using namespace std;
+
+bool isNum(string temp);
+int gcd(int a, int b);
 
 class Fraction
 {
@@ -12,7 +12,6 @@ class Fraction
 	int denominator;
 public:
 	Fraction() { numerator = 0; denominator = 1; }
-	Fraction(string fraction);
 	Fraction(int numerator, int denominator);
 	Fraction operator+(const Fraction &num)const;
 	Fraction operator-(const Fraction &num)const;
@@ -21,53 +20,19 @@ public:
 	Fraction operator/(const Fraction &num)const;
 	bool operator==(const Fraction &num)const;
 	bool operator==(const int &num)const;
-	char* operator=(const Fraction &num)const;
+	Fraction &operator=(const string &fra);
+	Fraction &operator=(const int &ntgr);
+	Fraction operator+=(const Fraction &num);
+	Fraction operator-=(const Fraction &num);
+	Fraction operator-=(const int &num);
+	Fraction operator--();
+	Fraction operator--(int);
+	Fraction operator*=(const Fraction &num);
+	Fraction operator/=(const Fraction &num);
+	string toString()const;
+	bool isInteger()const;
 	friend ostream &operator<<(ostream &output, const Fraction &num);
 };
-
-Fraction::Fraction(string fraction)
-{
-	size_t index;
-	//erase the brackets
-	if (index = fraction.find('(', 0) != string::npos)
-	{
-		fraction.erase(index, 1);
-		fraction.erase(fraction.find(')', 1), 1);
-	}
-
-	//count the negative sign, double negative is positive
-	int negative = count(fraction.begin(), fraction.end() - 1, '-');
-	bool positive;
-	if (negative % 2 == 0)
-		positive = true;
-	else
-		positive = false;
-
-	//break down the string and get the munerator and dnominator
-	index = fraction.find('/', 0);
-	if (index != string::npos)
-	{
-		numerator = abs(atoi(fraction.substr(0, index).c_str()));
-		denominator = abs(atoi(fraction.substr(index).c_str()));
-		if (denominator == 0)//zero divisor
-			throw "Denominator is zero!";
-	}
-	else
-	{
-		numerator = abs(atoi(fraction.c_str()));
-		denominator = 1;
-	}
-
-	//reduction of fraction by Euclidean Algorithm
-	int g = gcd(numerator, denominator);
-	if (g > 1)
-	{
-		numerator /= g;
-		denominator /= g;
-	}
-	if (!positive)
-		numerator = -numerator;
-}
 
 Fraction::Fraction(int numerator, int denominator)
 {
@@ -90,7 +55,7 @@ Fraction::Fraction(int numerator, int denominator)
 			this->numerator /= g;
 			this->denominator /= g;
 		}
-		if (positive)
+		if (positive)//not zero is true
 			this->numerator = -this->numerator;
 	}
 }
@@ -130,14 +95,125 @@ inline bool Fraction::operator==(const int &num)const
 	return (this->denominator == 1 && this->numerator == num);
 }
 
-char* Fraction::operator=(const Fraction &num)const
+Fraction &Fraction::operator=(const string &fra)
 {
-	char *temp = NULL;
-	if (num.denominator == 1)
-		itoa(num.numerator, temp, 10);
+	size_t index;
+	string fraction = fra;
+	if (!isNum(fraction))
+		throw "Not number!";
+	if (fraction == "")//special values
+		numerator = denominator = 1;
+	else if (fraction == "-")
+	{//special values
+		numerator = -1;
+		denominator = 1;
+	}
 	else
-		temp = strCombine("(", num.numerator, "/", num.denominator, ")");
-	return temp;
+	{
+		//count the negative sign, double negative is positive
+		int negative = count(fraction.begin(), fraction.end() - 1, '-');
+
+		if (index = fraction.find('(', 0) != string::npos)
+		{//erase the brackets
+			if (index == 1)
+				fraction.erase(0, 1);//there should be a negative sign, erase it, because once the numerator starts with a negative sign, string --a cannot turn to integer
+			fraction.erase(0, 1);
+			fraction.erase(fraction.find(')', 1), 1);
+		}
+
+		//break down the string and get the munerator and dnominator
+		index = fraction.find('/', 0);
+		if (index != string::npos)
+		{
+			numerator = abs(atoi(fraction.substr(0, index).c_str()));
+			denominator = abs(atoi(fraction.substr(index).c_str()));
+			if (denominator == 0)//zero divisor
+				throw "Denominator is zero!";
+		}
+		else
+		{
+			numerator = abs(atoi(fraction.c_str()));
+			denominator = 1;
+		}
+
+		//reduction of fraction by Euclidean Algorithm
+		int g = gcd(numerator, denominator);
+		if (g > 1)
+		{
+			numerator /= g;
+			denominator /= g;
+		}
+		if (negative % 2 == 1)
+			numerator = -numerator;
+	}
+	return *this;
+}
+
+inline Fraction &Fraction::operator=(const int &ntgr)
+{
+	this->numerator = ntgr;
+	this->denominator = 1;
+	return *this;
+}
+
+inline Fraction Fraction::operator+=(const Fraction &num)
+{
+	*this = *this + num;
+	return *this;
+}
+
+inline Fraction Fraction::operator-=(const Fraction &num)
+{
+	*this = *this - num;
+	return *this;
+}
+
+inline Fraction Fraction::operator-=(const int &num)
+{
+	*this = *this - num;
+	return *this;
+}
+
+inline Fraction Fraction::operator--()
+{
+	*this = *this - 1;
+	return *this;
+}
+
+inline Fraction Fraction::operator--(int)
+{
+	Fraction old = *this;
+	*this = *this - 1;
+	return old;
+}
+
+inline Fraction Fraction::operator*=(const Fraction & num)
+{
+	*this = *this * num;
+	return *this;
+}
+
+inline Fraction Fraction::operator/=(const Fraction & num)
+{
+	*this = *this / num;
+	return *this;
+}
+
+inline string Fraction::toString()const
+{
+	if (*this == 1)
+		return "";
+	else if (*this == -1)
+		return "-";
+	else if (denominator == 1)
+		return to_string(numerator);
+	else
+		return "(" + to_string(numerator) + "/" + to_string(denominator) + ")";
+}
+
+inline bool Fraction::isInteger()const
+{
+	return denominator == 1;
 }
 
 ostream &operator<<(ostream &output, const Fraction &num)
@@ -149,4 +225,3 @@ ostream &operator<<(ostream &output, const Fraction &num)
 	return output;
 }
 #endif // !FRACTION_H
-

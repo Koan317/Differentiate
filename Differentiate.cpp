@@ -7,9 +7,6 @@
 using namespace std;
 
 bool differentiate(char polynomial[], char result[]);
-string fractionMultiplication(string num1, string num2);
-string fractionDivision(string num1, string num2);
-string fractionAddition(string num1, string num2);
 bool isNum(string temp);
 bool isLegal(string temp);
 
@@ -26,7 +23,7 @@ int main()
 		int stat = differentiate(polynomial, result);
 		if (stat)
 			cout << "Result is f'(x)=" << result << endl;
-		for (int i = 0; result[i] != '\0'; ++i)
+		for (int i = 0; result[i] != '\0'; i++)
 			result[i] = '\0';
 		cout << "Press any key to continue..." << endl;
 		getchar();
@@ -51,7 +48,7 @@ bool differentiate(char polynomial[], char result[])
 	}
 	else if (temp == "-x")
 	{//special value: (-x)'=-1
-		result = "-1";
+		strcpy_s(result, 3, "-1");
 		return true;
 	}
 	/********special values end********/
@@ -69,69 +66,53 @@ bool differentiate(char polynomial[], char result[])
 	/********f(x)=ax********/
 	else if (monomial.back() == 'x' && isNum(temp = monomial.substr(0, monomial.size() - 1)))
 	{//(ax)'=a
-		Fraction multiple(temp);
-		if (multiple == 0)
-		{
-			result[0] = '0';
-			return true;
+		Fraction multiple;
+		try {
+			multiple = temp;
 		}
+		catch (const char *msg)
+		{
+			cerr << msg << endl;
+			return false;
+		}
+		if (multiple == 0)
+			result[0] = '0';
 		else
-
+		{
+			temp = multiple.toString();
+			strcpy_s(result, temp.size() + 1, temp.c_str());
+		}
 		return true;
 	}
 	/********f(x)=ax end********/
 	/********f(x)=ax^n********/
 	if ((index = monomial.find("x^", 0)) != string::npos)
-	{//atoi() cannot throw any exception automatically, so we cannot use try/catch
-		string multiple = monomial.substr(0, index);
-		string exponent = monomial.substr(index + 2);
-
-		if (index == 0)//such as x^2
-			multiple = "1/1";
-		else if (multiple.front() == '-' && index == 1)//such as -x^2
-			multiple = "-1/1";
-		else if (multiple.find('/', 0) == string::npos)//is another integer
-			multiple += "/1";
-
+	{
 		if (index == monomial.size() - 2)
 		{
 			cerr << "Exponent is missed, check out the monomial you input." << endl;
 			return false;
 		}
-		else if (exponent.find('x', 0) != string::npos)
+		Fraction multiple, exponent;
+		try {
+			multiple = monomial.substr(0, index);
+			exponent = monomial.substr(index + 2);
+		}
+		catch (const char *msg)
 		{
-			cerr << "x^x is not supported." << endl;
+			cerr << msg << endl;
 			return false;
 		}
-		else if (exponent.find('/', 0) == string::npos)
-		{//is integer
-			if (atoi(exponent.c_str()) == 0)
-			{
-				result[0] = '0';
-				return true;
-			}
-			exponent += "/1";
-		}
-
-		multiple = fractionMultiplication(multiple, exponent);
-		exponent = fractionAddition(exponent, "-1/1");
-		if (multiple == "error" || exponent == "error")
-			return false;
-		else if (multiple == "0")
+		
+		if (multiple == 0 || exponent == 0)
 		{
 			result[0] = '0';
 			return true;
 		}
 
-		//pack the multiple
-		if (multiple == "1")
-			multiple = "";
-		//when pack the exponent, if exponent equals one
-		if (exponent == "1")
-			temp = multiple + "x";
-		else//if exponent is another number(no matter integer or fraction)
-			temp = multiple + "x^" + exponent;
-
+		multiple *= exponent;
+		exponent--;
+		temp = multiple.toString() + "x^" + exponent.toString();
 		strcpy_s(result, temp.size() + 1, temp.c_str());
 		return result;
 	}
@@ -150,59 +131,90 @@ bool differentiate(char polynomial[], char result[])
 			return false;
 		}
 		temp = monomial.substr(0, index);
-		string multiple, base, tempstr;
-		bool negativebase = false;
+		Fraction multiple, base;
 		index = temp.find('e', 0);
-		if (isNum(temp))//such as 2^x
-		{
-			base = fractionMultiplication(temp, "1/1");
-			multiple = "";
-		}
-		else if (index != string::npos && (isNum(tempstr = temp.substr(0, index)) || tempstr.empty() || tempstr == "-"))//such as 2e^x
-		{
-			base = "e";
-			if (tempstr.empty())
-				tempstr = "1/1";
-			else if (tempstr == "-")
-				tempstr = "-1/1";
-			multiple = fractionMultiplication(tempstr, "1/1");
-		}
-		else if (temp.front() == '(')//such as (1/2)3^x
-		{
-			index = temp.find(')', 1);
-			if ((index + 1) != monomial.find("^x", 0))
-			{//(1/2)3^x
-				multiple = fractionMultiplication(temp.substr(0, index + 1), "1/1");
-				base = fractionMultiplication(temp.substr(index + 1), "1/1");
+		if (index != string::npos)
+			if (index == 0 || isNum(temp = temp.substr(0, index)))
+			{//ae^x
+				try {
+					multiple = temp;
+				}
+				catch (const char* msg)
+				{
+					cerr << msg << endl;
+				}
+				temp = multiple.toString() + "e^x";
+				strcpy_s(result, temp.size() + 1, temp.c_str());
+				return true;
 			}
 			else
-			{//(1/2)^x
-				multiple = "";
-				base = fractionMultiplication(temp.substr(0, index + 1), "1/1");
+			{
+				cerr << "Bad multiple in ae^x, check out the monimial you input." << endl;
+				return false;
+			}
+		else
+		{
+			if (isNum(temp))
+			{//2^x, -2^x, (-2)^x, (1/2)^x, (-1/2)^x, -(1/2)^x...
+				if (temp.front() == '-')
+				{
+					try {
+						base = temp.substr(1);
+						multiple = -1;
+					}
+					catch (const char *msg)
+					{
+						cerr << msg << endl;
+						return false;
+					}
+				}
+				else
+				{
+					try {
+						base = temp;
+						multiple = 1;
+					}
+					catch (const char *msg)
+					{
+						cerr << msg << endl;
+						return false;
+					}
+				}
+			}
+			else if (temp.front() == '(')
+			{//(-2)2^x, (1/2)2^x, (-1/2)(-2)^x, (1/2)(-1/2)^x, (-1/2)(1/2)^x...
+				index = temp.find(')', 1);
+				try {
+					multiple = temp.substr(0, index);
+					base = temp.substr(index);
+				}
+				catch (const char *msg)
+				{
+					cerr << msg << endl;
+					return false;
+				}
+			}
+			else
+			{//2(1/2)^x, -2(-1/2)^x...
+				index = temp.find('(', 1);
+				try {
+					multiple = temp.substr(0, index);
+					base = temp.substr(index);
+				}
+				catch (const char *msg)
+				{
+					cerr << msg << endl;
+					return false;
+				}
 			}
 		}
-		else if (temp.back() == ')')//such as 2(1/3)^x or (1/2)(3/4)^x
-		{
-			index = temp.find('(', 0);
-			multiple = fractionMultiplication(temp.substr(0, index), "1/1");
-			base = fractionMultiplication(temp.substr(index + 1), "1/1");
-		}
 
-		if (multiple == "1")
-			multiple = "";
-		else if (multiple == "-1")
-			multiple = "-";
-		if (base == "1")
+		if (base == 1)
 		{
 			result[0] = '0';
 			return true;
 		}
-		if (base == "e" && multiple != "1")
-			temp = multiple + base + "^x";
-		else if (base == "e" && multiple == "1")
-			temp = base + "^x";
-		else
-			temp = multiple + "ln" + base + "¡¤" + base + "^x";
+		temp = multiple.toString() + "ln" + base.toString() + "¡¤" + base.toString() + "^x";
 		strcpy_s(result, temp.size() + 1, temp.c_str());
 		return true;
 	}
@@ -210,30 +222,27 @@ bool differentiate(char polynomial[], char result[])
 	/********f(x)=nlog!ax********/
 	if ((index = monomial.find("ln", 0)) != string::npos)
 	{
-		string multiple = monomial.substr(0, index);
-		string base = monomial.substr(index + 2);
-		index = base.find('x', 0);
-		base.erase(index, 1);
-		if (multiple == "")
-			multiple = "1/1";
-		if (base == "")
-			base = "1/1";
-
-		if (isNum(multiple) && isNum(base))
-			multiple = fractionMultiplication(multiple, "1/1");
-		else
+		if (index + 2 >= monomial.size())
 		{
-			cerr << "Illegal characters in monomial!" << endl;
+			cerr << "Real number missed, check out the monimial you input." << endl;
 			return false;
 		}
-		if (multiple.find('/', 0) != string::npos)
-		{
-			temp = multiple.insert(multiple.find(')', 0) - 1, 1, 'x');
-			temp.erase(temp.find('(', 0), 1);
-			temp.erase(temp.find(')', 1), 1);
+		temp = monomial.substr(0, monomial.size() - 1);//remove variable x
+		Fraction multiple, base;
+		try {
+			multiple = monomial.substr(0, index);
+			base = monomial.substr(index + 2);
 		}
+		catch (const char *msg)
+		{
+			cerr << msg << endl;
+			return false;
+		}
+
+		if (multiple.isInteger())
+			temp = multiple.toString() + "/x";
 		else
-			temp = multiple + "/x";
+			temp = multiple.toString().insert(multiple.toString().find(')', 1) - 1, 1, 'x');
 		strcpy_s(result, temp.size() + 1, temp.c_str());
 		return true;
 	}

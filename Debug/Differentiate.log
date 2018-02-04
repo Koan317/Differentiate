@@ -1,3 +1,3 @@
-﻿  isNum.cpp
+﻿  Differentiate.cpp
+c:\users\gulon\documents\visual studio 2017\projects\differentiate\differentiate\differentiate.cpp(260): warning C4715: “differentiate”: 不是所有的控件路径都返回值
   Differentiate.vcxproj -> C:\Users\gulon\Documents\Visual Studio 2017\Projects\Differentiate\Debug\Differentiate.exe
-  Differentiate.vcxproj -> C:\Users\gulon\Documents\Visual Studio 2017\Projects\Differentiate\Debug\Differentiate.pdb (Partial PDB)

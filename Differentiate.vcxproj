@@ -115,7 +115,6 @@
     <ClCompile Include="gcd.cpp" />
     <ClCompile Include="isLegal.cpp" />
     <ClCompile Include="isNum.cpp" />
-    <ClCompile Include="strCombine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Fraction.h" />

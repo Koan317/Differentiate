@@ -7,6 +7,8 @@ using namespace std;
 
 bool isNum(string temp)
 {//negative numbers also can be recognized correctly
+	if (temp.front() == '-')
+		temp.erase(0, 1);//if there is a negative sign, erase it, because once the numerator starts with a negative sign, string --a cannot turn to integer
 	size_t index_a = temp.find('(', 0);//use for judge fractions
 	size_t index_b = temp.find(')', 1);//find from 1st item
 
