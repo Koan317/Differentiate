@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{D59BA78D-3A24-458A-8D08-1299F70C8976}</ProjectGuid>
+    <ProjectGuid>{67C8A2C7-68EF-4272-96AB-E4A16A6F3E47}</ProjectGuid>
     <RootNamespace>Differentiate</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -111,10 +111,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Differentiate.cpp" />
+    <ClCompile Include="differentiate.cpp" />
     <ClCompile Include="gcd.cpp" />
     <ClCompile Include="isLegal.cpp" />
     <ClCompile Include="isNum.cpp" />
+    <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Fraction.h" />

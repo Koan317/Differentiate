@@ -20,6 +20,8 @@ public:
 	Fraction operator/(const Fraction &num)const;
 	bool operator==(const Fraction &num)const;
 	bool operator==(const int &num)const;
+	bool operator<(const int &num)const;
+	bool operator>(const int &num)const;
 	Fraction &operator=(const string &fra);
 	Fraction &operator=(const int &ntgr);
 	Fraction operator+=(const Fraction &num);
@@ -30,6 +32,7 @@ public:
 	Fraction operator*=(const Fraction &num);
 	Fraction operator/=(const Fraction &num);
 	string toString()const;
+	string toStr()const;
 	bool isInteger()const;
 	friend ostream &operator<<(ostream &output, const Fraction &num);
 };
@@ -55,7 +58,7 @@ Fraction::Fraction(int numerator, int denominator)
 			this->numerator /= g;
 			this->denominator /= g;
 		}
-		if (positive)//not zero is true
+		if (!positive)//not zero is true
 			this->numerator = -this->numerator;
 	}
 }
@@ -95,12 +98,20 @@ inline bool Fraction::operator==(const int &num)const
 	return (this->denominator == 1 && this->numerator == num);
 }
 
+inline bool Fraction::operator<(const int &num)const
+{
+	return numerator < num*denominator;
+}
+
+inline bool Fraction::operator>(const int & num) const
+{
+	return numerator > num*denominator;
+}
+
 Fraction &Fraction::operator=(const string &fra)
 {
 	size_t index;
 	string fraction = fra;
-	if (!isNum(fraction))
-		throw "Not number!";
 	if (fraction == "")//special values
 		numerator = denominator = 1;
 	else if (fraction == "-")
@@ -110,10 +121,12 @@ Fraction &Fraction::operator=(const string &fra)
 	}
 	else
 	{
+		if (!isNum(fraction))
+			throw "Not number!";
 		//count the negative sign, double negative is positive
 		int negative = count(fraction.begin(), fraction.end() - 1, '-');
 
-		if (index = fraction.find('(', 0) != string::npos)
+		if ((index = fraction.find('(', 0)) != string::npos)
 		{//erase the brackets
 			if (index == 1)
 				fraction.erase(0, 1);//there should be a negative sign, erase it, because once the numerator starts with a negative sign, string --a cannot turn to integer
@@ -126,7 +139,7 @@ Fraction &Fraction::operator=(const string &fra)
 		if (index != string::npos)
 		{
 			numerator = abs(atoi(fraction.substr(0, index).c_str()));
-			denominator = abs(atoi(fraction.substr(index).c_str()));
+			denominator = abs(atoi(fraction.substr(index + 1).c_str()));
 			if (denominator == 0)//zero divisor
 				throw "Denominator is zero!";
 		}
@@ -209,6 +222,18 @@ inline string Fraction::toString()const
 		return to_string(numerator);
 	else
 		return "(" + to_string(numerator) + "/" + to_string(denominator) + ")";
+}
+
+inline string Fraction::toStr()const
+{
+	if (*this == 1)
+		return "";
+	else if (*this == -1)
+		return "-";
+	else if (denominator == 1)
+		return to_string(numerator);
+	else
+		return to_string(numerator) + "/" + to_string(denominator);
 }
 
 inline bool Fraction::isInteger()const

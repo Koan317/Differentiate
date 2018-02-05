@@ -80,6 +80,10 @@ bool isLegal(string temp)
 			temp.erase(it);
 		else if (*it == '!')
 			temp.erase(it);
+		else if (*it == '(')
+			temp.erase(it);
+		else if (*it == ')')
+			temp.erase(it);
 		else if (*it == 'l')
 		{//remove log, ln, lg
 			if (it + 1 == temp.end())
